@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+
+#/ command: colorenv:print: "Print colorful variables"
+#/ usage: rerun colorenv:print [options]
+#/ rerun-variables: RERUN, RERUN_VERSION, RERUN_MODULES, RERUN_MODULE_DIR
+#/ option-variables: 
+
+. "$RERUN_MODULE_DIR/lib/functions.sh" "print" || { 
+  echo >&2 "Failed loading function library." ; exit 1 ; 
+}
+
+set -o errexit -o nounset -o pipefail
+
+rerun_options_parse "$@"
+
+# Command implementation
+# ----------------------
+
+# - - -
+RED='\033[0;31m' # Red color code
+GREEN='\033[0;32m' # Green color code
+NC='\033[0;m' # No color code
+
+env > temp.txt
+
+while IFS= read -r -d $'\n' line; do
+    if [[ "$line" == *"="* ]]; then
+        name=${line%%=*} # Get name of variable
+        value=${line#*=} # Get value of variable
+        printf "${RED}${name}${NC}=${GREEN}${value}${NC}\n" # Formatted output
+    else
+        printf "${GREEN}${line}${NC}\n" # Assume that string without = is part of value
+    fi
+done < "temp.txt"
+# - - -
+
+# Done. Exit with last command exit status.
+exit $?
+
